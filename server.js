@@ -1,20 +1,22 @@
 const mongoose = require('mongoose');
 
-mongoose.Promise = global.Promise;
-
-// Se conecta com o banco de dados
-
-mongoose.connect('mongodb+srv://senai115:senai115@senaiprojetos.7uk6zdo.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp', {
-    dbName : 'api_comentarios',
-})
-.then(() => console.log("Conectado ao banco de dados") )
-
 // Criando as rotas e servidor
 
 const express = require('express') // Import da biblioteca
 const cors = require('cors') // Aceita conexões de multiplos servidores
 const app = express() // Nosso servidor
+const dotenv = require('dotenv')
 
+// Configurando variaveis de ambiente
+dotenv.config()
+
+// Se conecta com o banco de dados
+mongoose.Promise = global.Promise;
+
+mongoose.connect(process.env.BD_STRING, {
+    dbName : process.env.DB_NAME,
+})
+.then(() => console.log("Conectado ao banco de dados") )
 
 //Middleware
 
@@ -28,7 +30,7 @@ app.use(express.json());    //JavaScript Object Notation -> faz com que o servid
 
 app.get("/", async(req,res) => {
 
-    await comentario.find()               //Procura por todos os comentarios no banco de dados
+    await comentario.find().sort({"props.index" : -1})               //Procura por todos os comentarios no banco de dados
     .then((comentarioRecuperado) => {
 
         if(comentarioRecuperado){
@@ -55,7 +57,7 @@ app.get("/index/:index", async(req,res) => {
     .then((comentarioRecuperado) => {
 
         if(comentarioRecuperado){
-            res.status(200).send(comentarioRecuperado) // Caso tenha conseguido recuperar os dados do banco de dados, mandamos um status http 200 + o resultado
+            res.status(200).send(comentarioRecuperado.props) // Caso tenha conseguido recuperar os dados do banco de dados, mandamos um status http 200 + o resultado
         }
         else{
             res.status(404).json({"erro":"não achamo"}) // Caso ele não recupere nada, volta um 404 
@@ -67,6 +69,7 @@ app.get("/index/:index", async(req,res) => {
 
 })
 
+app.use((req,res,next) => {res.status(404).json({"erro":"to não"})})
 
 // Outros
 
